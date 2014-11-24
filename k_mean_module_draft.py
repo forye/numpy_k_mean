@@ -19,9 +19,9 @@ def my_k_means(Samples, K, T):
         Centers[k,:] = Samples[np.floor( N* rand(1)[0,0] ).astype(int) ,: ] 
     # K ,_ = np.shape( Centers)
     
-    guess = cluster1(Samples, Centers, T)
+    guess,Centers = cluster1(Samples, Centers, T)
     
-    return guess
+    return guess,Centers
 
 
 def cluster1(Samples,Centers,T):
@@ -60,7 +60,7 @@ def cluster1(Samples,Centers,T):
             print "succes!"
             break
     print "\n FINAL guess: " +str(guess)
-    return guess
+    return guess,Cents[0]
     
 '''
 what is more consuming?

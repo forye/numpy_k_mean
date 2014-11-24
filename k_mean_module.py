@@ -13,17 +13,19 @@ if __name__ == '__main__':
 import numpy as np
 from numpy.matlib import randn, rand
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from  k_mean_module_draft import *
 
 
+P = 800
 
-test_set = randn(80,2)
-test_set[  :20] = 2* test_set[:20]+[2,3]
-test_set[20:40] = 2* test_set[:20]+[3,2]
-test_set[40:60] = 2* test_set[:20]+[4,1]
-test_set[60:80] = 2* test_set[:20]+[-1,0]
+qP = P/4
+test_set = randn(P,2)
+test_set[  :qP] = 2* test_set[:qP]+[2,3]
+test_set[qP:2*qP] = 2* test_set[:qP]+[3,2]
+test_set[2*qP:3*qP] = 2* test_set[:qP]+[4,1]
+test_set[3*qP:4*qP] = 2* test_set[:qP]+[-1,0]
 
 
 x1= test_set
@@ -34,11 +36,23 @@ T1=50
 
 
 i=0
-S=50
+S=1
 while i<S:
-    res1 = my_k_means(x1, K1, T1)
+    res1, centroids = my_k_means(x1, K1, T1)
     i+=1
     print "returend " + str(i) + " times...."
+#     plt.plot(res1[0],res1[1],)
+    colors = ['cyan','blue', 'green', 'magenta','red','black']
+    col=[0]*len(res1)
+    for p in range(len(res1)):
+        col[p] = colors[res1[p]]
+
+    plt.scatter(x1[:,0], x1[:,1], c=col )#facecolors='none', edgecolors='r')
+    
+    plt.scatter(centroids[0], centroids[1], s=180, facecolors=colors, edgecolors='white')
+    
+    plt.show()
+
 
 
 
