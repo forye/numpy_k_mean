@@ -3,17 +3,25 @@ Created on Nov 23, 2014
 
 @author: Idan
 '''
-#from sklearn.cluster.k_means_ import k_means
+    
+'''
+what is more consuming?
+reshaping Centers and Samples?
+
+or approacing the 3d matrics via Cents[0,:,k] or Samples[guess == k,:,0]
+'''    
+
 
 if __name__ == '__main__':
     pass
 
-#from numpy import size, argmin, empty, repeat as rp
 
 import numpy as np
 from numpy.matlib import randn, rand
 
 import matplotlib.pyplot as plt
+
+#from sklearn.cluster.k_means_ import k_means
 
 
 
@@ -37,7 +45,6 @@ def my_k_means(Samples, K, Iter):
 
 
 def cluster1(Samples,Centers,Iter):
-    #primal
     P ,N = np.shape( Samples)
     K ,_ = np.shape( Centers)
     
@@ -47,12 +54,10 @@ def cluster1(Samples,Centers,Iter):
     
     guess = fit_groups(Samps,Cents)  
     
-    #print "\nguess: " +str(guess)
-    #print "\nCents: "+ str(Cents)
           
-    for t in xrange(Iter-1):            
+    for _ in xrange(Iter-1):            
         '''
-        change Cent to Global?
+        change Cent to Global? No,didnt prove itself
         '''
         counter = count_samples_in_group(guess,K)
         
@@ -62,25 +67,13 @@ def cluster1(Samples,Centers,Iter):
          
         guess = fit_groups(Samps,Cents)    
         
-        #print Cents
-        # print "\nguess: " +str(guess)
-        # print "\nCents: "+ str(Cents)
-        # print "\ncounter: " +str(counter)
-        #print Cents
-        
         if np.all(Cents_old == Cents):
-            print "success!"
+#             print "success!"
             break
-    print "\nFinished after " +str(t) +" itterations"
-    print "\n FINAL guess: " +str(guess)
+#     print "\nFinished after " +str(t) +" itterations"
+#     print "\n FINAL guess: " +str(guess)
     return guess,Cents[0]
-    
-'''
-what is more consuming?
-reshaping Centers and Samples?
 
-or approacing the 3d matrics via Cents[0,:,k] or Samples[guess == k,:,0]
-'''    
         
 
 def fit_groups(Samps,Cents):
@@ -97,15 +90,13 @@ def count_samples_in_group(guess,K):
 
 def fix_empty_groups(counter,Samps,Cents):
     
-    acc =0
+#     acc =0
     for k,c in enumerate(counter):
         
-        if not c:
-        
+        if not c:        
             Cents[0,:,k] = Samps[ ( np.argmax(np.linalg.norm(Samps[:,:,0] - 
-                                np.nanmean(Cents,axis=2), axis=1)) +acc )%Samps.shape[0] , : , 0]
-            acc +=1
-            print "new centroid artificially generated Cent: "# +str(Cents) 
+                                np.nanmean(Cents,axis=2), axis=1))) , : , 0]
+#             print "new centroid artificially generated Cent: " + str(Cents[0,:,k])
 
     return Cents
 
@@ -119,15 +110,13 @@ def new_centroids(guess,Samps,Cents):
     K = Cents.shape[2]
     for k in xrange(K):
         #Cents[0,:,k] = np.transpose( np.mean(  Samps[guess == k,:,0], axis = 0 ) )
-        Cents[0,:,k] = np.mean( Samps[guess == k], axis = 0 ) 
-        if np.any(np.isnan( Cents[0,:,k])):#not all(
+        Cents[0,:,k] = np.nanmean( Samps[guess == k], axis = 0 )  #changed to nanmean to no mean on empty slice
+        if np.any(np.isnan( Cents[0,:,k])):
             Cents[0,:,k]= Samps[0,:]
     return Cents
   
   
 def plot_results(x1,res1,centroids):
-    print "returend " + str(i) + " times...."
-#     plt.plot(res1[0],res1[1],)
     colors = ['red','blue','green','magenta','cyan','black']
     col=[0]*len(res1)
     for p in range(len(res1)):
@@ -139,9 +128,7 @@ def plot_results(x1,res1,centroids):
 
 def create_test_set1(P,N=2,mu =1,sig =1):
     qP = P/4
-    #mu=[0]*N
-    #mu = [ np.array([ np.floor(N * rand(1)).astype(int) for _ in range(N) ]) for _ in range(4)]
-      
+        
     test_set = randn(P,N)
     if N==2:    
         test_set[  :qP] =sig* test_set[:qP]+[2,3]
@@ -154,7 +141,7 @@ def create_test_set1(P,N=2,mu =1,sig =1):
 
 def sort_cents(A):
     '''
-    sorts a numpay array accoding to the 1sth index
+    sorts a numpy array accoding to the 1sth index
     '''
     n = A.shape[0]
     for k in xrange(n):
@@ -167,40 +154,33 @@ def sort_cents(A):
         A[minimal,:] = temp1       
     return A
 
-def distance_from_means(centroids,mus= [ [2,3],[3,2],[4,1],[-1,0] ]):
+def distance_from_means( centroids, mus= None ):
     '''
-    retruns the l2 norm of of the mus from the centroids
+    returns the l2 norm of of the mu's from the centroids
     '''
-    mus = np.array( [ [2,3],[3,2],[4,1],[-1,0] ] )
+    if mus==None:
+        mus = np.array( [ [2,3],[3,2],[4,1],[-1,0] ] )
+    else:
+        mus = np.array(mus)    
     c = np.transpose(centroids)
     return np.linalg.norm(sort_cents(mus)- sort_cents(c))
+
+
+def mean_distance_from_means( centroids, mus= None ):
+    '''
+    returns the l2 norm of of the mu's from the centroids
+    '''
+    if mus==None:
+        mus = np.array( [ [2,3],[3,2],[4,1],[-1,0] ] )
+    else:
+        mus = np.array(mus)
+    
+    c = np.transpose(centroids)
+    return np.mean(np.abs(sort_cents(mus)- sort_cents(c) ) )
+#     return np.mean( np.mean(np.abs(sort_cents(mus)- sort_cents(c)) ))
+
 
 def recount_samples(res1,K): 
         return sum( np.sum(np.array([res1 == k for k in range( K )]),axis=1))
     
  
-'''
-P = number of samples
-K1 =number of clusters
-Iter1=number if itterations to finish
-S=times of reexecution
-'''
-
-P = 1000
-K1 =4
-Iter1=100
-S=1
-    
-x1= create_test_set1(P,N=2,sig=0.25)
-
-
-i=0# iterratuib start
-S=100-i# itteration end+1
-
-while i<S:
-    res1, centroids = my_k_means(x1, K1, Iter1)
-    d = distance_from_means(centroids)
-    print d 
-    i+=1
-    plot_results(x1,res1,centroids)
-    
