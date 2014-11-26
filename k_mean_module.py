@@ -139,6 +139,18 @@ def create_test_set1(P,N=2,mu =1,sig =1):
         test_set =np.array(  np.sqrt(sig) *randn(P,N) ) + mu *np.array( range(N) )
     return test_set
 
+
+def create_test_set2(P,N=2,sig1=0.5, sig2=0.5,q=0.5):#create_test_set2(P,N=2,sig1 =1,sig2 =1,q=0.5):
+    qP = q*P
+        
+    test_set = randn(P,N)
+    if N==2:    
+        test_set[  :qP] =sig1* test_set[:qP]+[0,3]
+        test_set[qP:P] =sig2 *test_set[qP:P]+[3,0]        
+    return test_set
+
+
+
 def sort_cents(cents):
     '''
     sorts a numpy array accoding to the 1sth index
