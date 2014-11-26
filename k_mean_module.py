@@ -139,10 +139,11 @@ def create_test_set1(P,N=2,mu =1,sig =1):
         test_set =np.array(  np.sqrt(sig) *randn(P,N) ) + mu *np.array( range(N) )
     return test_set
 
-def sort_cents(A):
+def sort_cents(cents):
     '''
     sorts a numpy array accoding to the 1sth index
     '''
+    A=np.array(cents)
     n = A.shape[0]
     for k in xrange(n):
         minimal = k
@@ -151,19 +152,42 @@ def sort_cents(A):
                 minimal = j
         temp1 = np.array( A[k,:] )        
         A[k,:] =A[minimal,:]
-        A[minimal,:] = temp1       
+        A[minimal,:] = temp1   
+    
+    
     return A
 
-def distance_from_means( centroids, mus= None ):
+def sort_groups_by_centroids(cents):
     '''
-    returns the l2 norm of of the mu's from the centroids
+    sorts centroids
     '''
-    if mus==None:
-        mus = np.array( [ [2,3],[3,2],[4,1],[-1,0] ] )
-    else:
-        mus = np.array(mus)    
-    c = np.transpose(centroids)
-    return np.linalg.norm(sort_cents(mus)- sort_cents(c))
+    A=np.transpose( np.array(cents) )
+    n = A.shape[0]
+    B=np.array( range(n) )
+    for k in xrange(n):
+        minimal = k        
+        for j in xrange(k + 1, n):
+            if (A[minimal,0] > A[j,0]):
+                minimal = j        
+        temp1 = np.array( A[k,:] )
+        temp2 = B[k]
+        A[k,:] =A[minimal,:]
+        B[k] = B[minimal]
+        A[minimal,:] = temp1
+        B[minimal] = temp2
+    return B
+
+
+# def distance_from_means( centroids, mus= None ):
+#     '''
+#     returns the l2 norm of of the mu's from the centroids
+#     '''
+#     if mus==None:
+#         mus = np.array( [ [2,3],[3,2],[4,1],[-1,0] ] )
+#     else:
+#         mus = np.array(mus)    
+#     c = np.transpose(centroids)
+#     return np.linalg.norm(sort_cents(mus)- sort_cents(c))
 
 
 def mean_distance_from_means( centroids, mus= None ):
@@ -175,8 +199,27 @@ def mean_distance_from_means( centroids, mus= None ):
     else:
         mus = np.array(mus)
     
-    c = np.transpose(centroids)
+    c = np.array( np.transpose(centroids) )
     return np.mean(np.abs(sort_cents(mus)- sort_cents(c) ) )
+#     return np.mean( np.mean(np.abs(sort_cents(mus)- sort_cents(c)) ))
+
+
+def mean_varience_diff( centroids,X,res, sig, stds= None ):
+    '''
+    stds
+    '''
+    if stds==None:
+        stds = np.array( [ [sig,sig],[sig,sig],[2*sig,2*sig],[2*sig,2*sig] ] )
+    else:
+        stds = np.array(stds)
+    stds1=sort_cents(stds)
+    group = sort_groups_by_centroids(centroids)
+    measured = np.empty(stds.shape)  
+    for k in range(len(stds)):
+        measured[k] = np.abs( stds1[k] -  np.std(X[res==group[k]] , axis=0 ))
+    return np.mean(measured)
+
+#     return np.mean(np.abs(sort_cents(stds)- sort_cents(c) ) )
 #     return np.mean( np.mean(np.abs(sort_cents(mus)- sort_cents(c)) ))
 
 
