@@ -14,13 +14,13 @@ S=times of reexecution
 '''
 from k_mean_module import create_test_set1,my_k_means,plot_results,create_test_set2
 
-P = 1000
-K1 =2
+P = 8000
+K1 =4
 Iter1=100
 S=1
     
-# x1= create_test_set1(P,N=2,sig=0.5)
-x1= create_test_set2(P,N=2,sig1=0.5, sig2=0.5,q=0.95)
+x1= create_test_set1(P,N=2,sig=1)
+# x1= create_test_set2(P,N=2,sig1=1, sig2=0.25,q=0.70)
 
 
 

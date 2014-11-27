@@ -24,89 +24,185 @@ import matplotlib.pyplot as plt
 #from sklearn.cluster.k_means_ import k_means
 
 
-
-
-
 def my_k_means(Samples, K, Iter):
+    '''
+    gets:
+    Samples:PxN list/Array/Matrix type,
+    K: number of groups
+    Iter: maximum desired iterations
     
+    returns:
+    guess: 1xN int array classifying each sample to group
+    Centers: NxK array representing the centroids of each group
+    '''
+    # initialize the samples to an warray
     Samples=np.array(Samples)    
+    #initialize N as the number of attributes 
     _ ,N = np.shape(Samples)
-    
+    #create an empty array for the centroids
     Centers = np.empty([K,N])
     
-    #init groups 
+    #init groups in randomly chosen samples 
     for k in range(K):
         Centers[k,:] = Samples[np.floor( N* rand(1)[0,0] ).astype(int) ,: ] 
-    # K ,_ = np.shape( Centers)
     
-    guess,Centers = cluster1(Samples, Centers, Iter)
-    
-    return guess,Centers
+    #run and return the k-mean algorithm
+    return start_k_mean(Samples, Centers, Iter)
 
 
-def cluster1(Samples,Centers,Iter):
+def start_k_mean(Samples,Centers,Iter):
+    '''
+    gets:
+    Samples:PxN list/Array/Matrix type,
+    Centers:randomly initialized centroids
+    Iter: maximum desired iterations
+    
+    returns:
+    guess: 1xN int array classifying each sample to group
+    Centers: NxK array representing the centroids of each group
+    
+    '''
+    # initialize P in Smaples number, N as attributes number and K in groups number
     P ,N = np.shape( Samples)
     K ,_ = np.shape( Centers)
     
-    #Samps = np.array(np.transpose(Samples)).reshape(1,P,N)
+    #reshape Samples and Centers to 3d ndarrays, for quicker computation if the future
     Samps = Samples.reshape(P,N,1)
     Cents = Centers.reshape(1,N,K)
     
+    #fits the samples to initial centroids
     guess = fit_groups(Samps,Cents)  
     
-          
-    for _ in xrange(Iter-1):            
-        '''
-        change Cent to Global? No,didnt prove itself
-        '''
+    #itterate 'Iter' times      
+    for i in xrange(Iter-1):            
+        #creates a counter, 1xK counts the amount of samples for each group
         counter = count_samples_in_group(guess,K)
         
+        #if a group is empty, initialize the groups centroid to the most far values from the mean of the centroids
         Cents = fix_empty_groups(counter,Samps,Cents)
+       
+        #remember the initial centroids, for stopping condition
         Cents_old= np.array(Cents)
+        
+        # calculate the new centroids according to the old centroids guess 
         Cents = new_centroids(guess,Samples,Cents)
-         
+        
+        # fit again according to the new centroids
         guess = fit_groups(Samps,Cents)    
         
+        # if the centroids havent changed in the last itteration, finish process
         if np.all(Cents_old == Cents):
 #             print "success!"
             break
+        
+        #print status before finishing
 #     print "\nFinished after " +str(t) +" itterations"
 #     print "\n FINAL guess: " +str(guess)
+
+#     print "number of itterarions: " + str(i)
+    #retrun results (cents is still a 3d array!)
     return guess,Cents[0]
 
         
 
 def fit_groups(Samps,Cents):
-    return np.argmin( np.linalg.norm(Samps-Cents, axis=1) , axis =1)
-    #return np.argmin( np.linalg.norm(Samples.reshape(P,N,1)-Centers.reshape(1,N,K), axis=1) , axis =1)
+    '''
+    calculate the centroids from the samples to the centroids using numpy,
+    array broadcasting and linear algebra- should be very quick and efficient
+    
+    taking the index of each group representing the minimal normed(l2) 
+    difference between the samples and the centroids
+    
+    Samples: 1xPxN Array type
+    Centers: NxKx1 array representing the centroids of each group
 
+    retruns guesses list: 1xP array int array classifying each sample to group
+    '''
+    return np.argmin( np.linalg.norm(Samps-Cents, axis=1) , axis =1)
+    
 
 def count_samples_in_group(guess,K):
-    result =[0]*K
-    for k in range(K):
-        result[k] = np.sum( guess == k)
-    return result
+    '''
+    counts the numbers of samples classified to each group
+     guesses list: 1xP array int array classifying each sample to group
+    K- number of clusters
+    returns a list (why not 1xK array?) containes number of samples for each group
+    '''
+    #for each group, sum all the guesses 
+    return [ np.sum( guess == k) for k in range(K)]
+    
+    
+    #create a list for result. each group defined by its index
+#     result =[0]*K
+
+#     for k in range(K):
+#         result[k] = np.sum( guess == k)
+#     return result
+
+# '''
+# from
+# np.mean(np.array([]))
+# got
+# C:\Python27\lib\site-packages\numpy\core\_methods.py:59: RuntimeWarning: Mean of empty slice.
+#   warnings.warn("Mean of empty slice.", RuntimeWarning)
+# nan
+# C:\Python27\lib\site-packages\numpy\core\_methods.py:71: RuntimeWarning: invalid value encountered in double_scalars
+#   ret = ret.dtype.type(ret / rcount)
+# 
+# Idan
+# '''
+
 
 
 def fix_empty_groups(counter,Samps,Cents):
+    '''
+    for each empty group, initialize its centroid to the most far sample from the other
+    centroids mean 
     
-#     acc =0
+    gets:
+    counter: a list (why not 1xK array?) containes number of samples for each group
+    Samples: 1xPxN Array type
+    Cents: NxKx1 array representing the centroids of each group    
+    retruns:
+    Cents: NxKx1 array representing the NEW centroids, after updating the empty groups centroids    
+    '''    
     for k,c in enumerate(counter):
-        
         if not c:        
-            Cents[0,:,k] = Samps[ ( np.argmax(np.linalg.norm(Samps[:,:,0] - 
-                                np.nanmean(Cents,axis=2), axis=1))) , : , 0]
+            Cents[0,:,k] = Samps[  np.argmax(  np.linalg.norm(Samps[:,:,0] - 
+                                          np.nanmean(Cents,axis=2), axis=1)  ), : , 0]
 #             print "new centroid artificially generated Cent: " + str(Cents[0,:,k])
 
     return Cents
 
 
 def fix_empty_group(counter,Samps,Cents):
+    '''
+    for ONLY 1 GROUP! 
+    initialize its centroid to the most far sample from the other
+    centroids mean 
+    
+    gets:
+    counter: a list (why not 1xK array?) containes number of samples for each group
+    Samples: 1xPxN Array type
+    Cents: NxKx1 array representing the centroids of each group    
+    retruns:
+    Cents: NxKx1 array representing the NEW centroids, after updating the empty groups centroids    
+    '''    
     return Samps[ ( np.argmax(np.linalg.norm(Samps[:,:,0] - 
                                 np.nanmean(Cents,axis=2), axis=1))) , : , 0]
   
 
 def new_centroids(guess,Samps,Cents):
+    '''
+    updates the new centroids to the (new) groups classification guesses mean
+    gets:
+    counter: a list (why not 1xK array?) containes number of samples for each group
+    Samples: 1xPxN Array type
+    Cents: NxKx1 array representing the centroids of each group    
+    retruns:
+    Cents: NxKx1 array representing the NEW centroids, after updating the empty groups centroids
+    
+    '''
     K = Cents.shape[2]
     for k in xrange(K):
         #Cents[0,:,k] = np.transpose( np.mean(  Samps[guess == k,:,0], axis = 0 ) )
@@ -128,7 +224,6 @@ def plot_results(x1,res1,centroids):
 
 def create_test_set1(P,N=2,mu =1,sig =1):
     qP = P/4
-        
     test_set = randn(P,N)
     if N==2:    
         test_set[  :qP] =sig* test_set[:qP]+[2,3]
@@ -153,7 +248,7 @@ def create_test_set2(P,N=2,sig1=0.5, sig2=0.5,q=0.5):#create_test_set2(P,N=2,sig
 
 def sort_cents(cents):
     '''
-    sorts a numpy array accoding to the 1sth index
+    sorts a numpy array according to the 1sth index
     '''
     A=np.array(cents)
     n = A.shape[0]
@@ -171,7 +266,7 @@ def sort_cents(cents):
 
 def sort_groups_by_centroids(cents):
     '''
-    sorts centroids
+    sorts centroids group indexes
     '''
     A=np.transpose( np.array(cents) )
     n = A.shape[0]
@@ -218,7 +313,7 @@ def mean_distance_from_means( centroids, mus= None ):
 
 def mean_varience_diff( centroids,X,res, sig, stds= None ):
     '''
-    stds
+    returns the abs norm of of the mu's from the centroids
     '''
     if stds==None:
         stds = np.array( [ [sig,sig],[sig,sig],[2*sig,2*sig],[2*sig,2*sig] ] )
@@ -236,6 +331,9 @@ def mean_varience_diff( centroids,X,res, sig, stds= None ):
 
 
 def recount_samples(res1,K): 
-        return sum( np.sum(np.array([res1 == k for k in range( K )]),axis=1))
+    '''
+    returns the sum samples classified to each group
+    '''
+    return sum( np.sum(np.array([res1 == k for k in range( K )]),axis=1))
     
  
